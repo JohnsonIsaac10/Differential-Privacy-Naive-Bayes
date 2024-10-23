@@ -1,20 +1,16 @@
 import NaiveBayesLDP
 from NaiveBayesLDP import DataAggregator, Individuals, NaiveBayesLDP, normalize, Bayes_Model
-
 import pandas as pd
 import numpy as np
 # 用于编码的类
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import cross_val_score
-
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.naive_bayes import GaussianNB
-
 from sklearn.model_selection import train_test_split
 from pandas.core.frame import DataFrame
-
 
 train_data_path = "./data/connect-4.csv"
 test_data_path = "./data/connect-4.csv"
@@ -48,9 +44,6 @@ def process_test_data(test_data_df):
 
 
 def process_train_data(train_data_df):
-
-    # train_data_df.to_csv("./data/test_data.csv")
-
     train_data = train_data_df.values
 
     # 连续属性的索引
@@ -71,18 +64,13 @@ def process_train_data(train_data_df):
         if type(item) == int:
             temp = normalize(train_data[:, index])
             train_data_encode[:, index] = temp
-            # print("continuous: {}".format(index))
-
             continuous_index.append(index)
         else:
             # 对于每一个非数字的列，分别创建一个标签编码器，便于后期用来预测样本
             # 每一个标签编码器分别使用各自列的数据进行编码，这样预测数据时可以不用再训练标签分类器，直接对需要预测的样本数据进行编码
             label_encoder.append(LabelEncoder())
             train_data_encode[:, index] = label_encoder[-1].fit_transform(train_data[:, index])
-
-            # print("discrete: {}".format(index))
             discrete_index.append(index)
-
 
     if len(discrete_index) != 0:
         discrete_index.pop()  # 最后一列是类别，不属于属性
@@ -100,7 +88,7 @@ def split_test(data, test_size=0.2):
     return X_test, Y_test
 
 
-def process_data(train_data_path, test_data_path = "", test_size=0.2):
+def process_data(train_data_path, test_data_path="", test_size=0.2):
     if test_data_path == "":
         train_df = pd.read_csv(train_data_path)
         X_train, Y_train, train_data_encode, continuous_index, discrete_index = process_train_data(train_df)
@@ -120,14 +108,13 @@ def process_data(train_data_path, test_data_path = "", test_size=0.2):
 if __name__ == '__main__':
     eps_dis = 5
     eps_con = 2
-    # train_data_df = get_data(train_data_path="./data/connect-4.csv")
-    # X_train, Y_train, train_data_encode, continuous_index, discrete_index = process_train_data(train_data_df)
-
-    X_train, Y_train, X_test, Y_test, continuous_index = process_data(train_data_path="./data/connect-4.csv", test_data_path="./data/connect-4.csv")
+    X_train, Y_train, X_test, Y_test, continuous_index = process_data(train_data_path="./data/connect-4.csv",
+                                                                      test_data_path="./data/connect-4.csv")
 
     import matplotlib.pyplot as plt
 
     eps_dis_list = [0.1, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7]
+
     acc_Bayes_list_mean = []
     precision_Bayes_list_mean = []
     recall_Bayes_list_mean = []
@@ -135,7 +122,9 @@ if __name__ == '__main__':
     acc_LDP_list_mean = []
     precision_LDP_list_mean = []
     recall_LDP_list_mean = []
+
     test_times = 50
+
     for i in range(test_times):
         acc_LDP_list = []
         precision_LDP_list = []
@@ -144,11 +133,13 @@ if __name__ == '__main__':
         acc_Bayes_list = []
         precision_Bayes_list = []
         recall_Bayes_list = []
+
         for eps_dis in eps_dis_list:
             _, X_test, _, Y_test = train_test_split(X_train, Y_train, test_size=0.2)
             naiveBayesLDP = NaiveBayesLDP(eps_con=eps_con, eps_dis=eps_dis)
             naiveBayesLDP.fit(X_train=X_train, Y_train=Y_train, continuous_index=continuous_index)
-            acc_LDP, _, precision_LDP, recall_LDP = naiveBayesLDP.predict(X_test=X_test, Y_test=Y_test, continuous_index=continuous_index)
+            acc_LDP, _, precision_LDP, recall_LDP = naiveBayesLDP.predict(X_test=X_test, Y_test=Y_test,
+                                                                          continuous_index=continuous_index)
             acc_Bayes, precision_Bayes, recall_Bayes = Bayes_Model(X_train, Y_train, X_test, Y_test)
 
             acc_LDP_list.append(acc_LDP)

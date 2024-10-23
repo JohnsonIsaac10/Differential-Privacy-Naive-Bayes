@@ -6,15 +6,11 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import cross_val_score
-
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.naive_bayes import GaussianNB
-
 from sklearn.model_selection import train_test_split
 from pandas.core.frame import DataFrame
-
-
 
 
 def process_test_data(test_data_df):
@@ -28,7 +24,6 @@ def process_test_data(test_data_df):
 
     # index是data每一个元素的下标，item是data每一个元素的内容
     for index, item in enumerate(test_data[0]):
-
         # 对于每一个非数字的列，分别创建一个标签编码器，便于后期用来预测样本
         # 每一个标签编码器分别使用各自列的数据进行编码，这样预测数据时可以不用再训练标签分类器，直接对需要预测的样本数据进行编码
         label_encoder.append(LabelEncoder())
@@ -41,9 +36,6 @@ def process_test_data(test_data_df):
 
 
 def process_train_data(train_data_df):
-
-    # train_data_df.to_csv("./data/test_data.csv")
-
     train_data = train_data_df.values
 
     # 连续属性的索引
@@ -64,8 +56,6 @@ def process_train_data(train_data_df):
         # 每一个标签编码器分别使用各自列的数据进行编码，这样预测数据时可以不用再训练标签分类器，直接对需要预测的样本数据进行编码
         label_encoder.append(LabelEncoder())
         train_data_encode[:, index] = label_encoder[-1].fit_transform(train_data[:, index])
-
-        # print("discrete: {}".format(index))
         discrete_index.append(index)
 
     if len(discrete_index) != 0:
@@ -89,7 +79,6 @@ def process_data(train_data_path, test_data_path = "", test_size=0.2):
         train_df = pd.read_csv(train_data_path)
         X_train, Y_train, train_data_encode, continuous_index, discrete_index = process_train_data(train_df)
         X_test, Y_test = split_test(data=train_data_encode, test_size=test_size)
-        # X_train, X_test, Y_train, Y_test = train_test_split(X_train, Y_train, test_size=test_size)
 
         return X_train, Y_train, X_test, Y_test, continuous_index
     elif test_data_path != "":
@@ -105,9 +94,6 @@ if __name__ == '__main__':
     eps_dis = 4
     eps_con = 2
     naiveBayesLDP = NaiveBayesLDP(eps_con=eps_con, eps_dis=eps_dis)
-    # train_data_df = get_data(train_data_path="./data/connect-4.csv")
-    # X_train, Y_train, train_data_encode, continuous_index, discrete_index = process_train_data(train_data_df)
-
     X_train, Y_train, X_test, Y_test, continuous_index = process_data(train_data_path="./data/kr-vs-kp.csv")
 
     import matplotlib.pyplot as plt
@@ -121,7 +107,9 @@ if __name__ == '__main__':
     acc_LDP_list_mean = []
     precision_LDP_list_mean = []
     recall_LDP_list_mean = []
+
     test_times = 50
+
     for i in range(test_times):
         acc_LDP_list = []
         precision_LDP_list = []
@@ -153,7 +141,6 @@ if __name__ == '__main__':
         acc_LDP_list_mean.append(acc_LDP_list)
         precision_LDP_list_mean.append(precision_LDP_list)
         recall_LDP_list_mean.append(recall_LDP_list)
-
 
     acc_Bayes_list_mean = np.mean(acc_Bayes_list_mean, axis=0)
     precision_Bayes_list_mean = np.mean(precision_Bayes_list_mean, axis=0)
@@ -194,8 +181,5 @@ if __name__ == '__main__':
     plt.legend(loc="lower right")
     plt.savefig("./ieee_fig_new/Chess_ieee_recall.png")
     plt.show()
-
-    # X_test, Y_test, test_data_encode, _, _ = process_test_data(test_data_df)
-    # X_train, X_test,Y_train, Y_test = train_test_split(X_train, Y_train, test_size=0.2)
 
 
