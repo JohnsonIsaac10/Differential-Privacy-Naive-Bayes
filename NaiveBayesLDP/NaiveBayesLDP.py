@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 # 用于编码的类
-from sklearn.metrics import confusion_matrix, precision_score, recall_score
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score
 from sklearn.model_selection import cross_val_score
 from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB, CategoricalNB
 from sklearn.preprocessing import LabelEncoder
@@ -608,20 +608,26 @@ class NaiveBayesLDP:
         # recall = TP / (TP + FN + 1)
         recall = recall_score(Y_test, pred_result, average='macro')
         accuracy = acc / Y_test.shape[0]
+        f1 = f1_score(Y_test, pred_result, average='macro')
         accuracy_lap = acc_lap / Y_test.shape[0]
         accuracy_multi = acc_multi / Y_test.shape[0]
         print("accuracy: {:.2f}%".format(float(accuracy) * 100))
         print("precision: {:.2f}%".format(float(precision) * 100))
         print("recall: {:.2f}%".format(float(recall) * 100))
+        print("f1 score: {:.2f}%".format(float(f1) * 100))
         # print("accuracy_multi: {:.2f}%".format(float(accuracy_multi) * 100))
 
-        return accuracy, accuracy_multi, precision, recall
+        return accuracy, accuracy_multi, precision, recall, f1
 
 
-def Bayes_Model(X_train, Y_train, X_test, Y_test):
+def Bayes_Model(X_train, Y_train, X_test, Y_test, continuous):
+
     # 建立朴素贝叶斯分类器模型
-    gaussianNB = CategoricalNB()            # 离散型数据
-    # gaussianNB = GaussianNB()             # 连续型数据
+    if continuous:
+        gaussianNB = GaussianNB()             # 连续型数据
+    else:
+        gaussianNB = CategoricalNB()            # 离散型数据
+
     gaussianNB.fit(X_train, Y_train)
 
     # 打印性能报告
@@ -642,11 +648,13 @@ def Bayes_Model(X_train, Y_train, X_test, Y_test):
     # recall = TP / (TP + FN)
     recall = recall_score(Y_test, y_pred, average='macro')
     accuracy = acc / len(y_pred)
+    f1 = f1_score(Y_test, y_pred, average='macro')
     print("baseline accuracy: {:.2f}%".format(float(accuracy) * 100))
     print("baseline precision: {:.2f}%".format(float(precision) * 100))
     print("baseline recall: {:.2f}%".format(float(recall) * 100))
+    print("baseline f1 score: {:.2f}%".format(float(f1) * 100))
     print('\n')
     # confusion_mat = confusion_matrix(Y_test, y_pred)
     # print(confusion_mat)  # 混淆矩阵
 
-    return accuracy, precision, recall
+    return accuracy, precision, recall, f1

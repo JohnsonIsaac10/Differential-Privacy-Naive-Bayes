@@ -118,10 +118,12 @@ if __name__ == '__main__':
     acc_Bayes_list_mean = []
     precision_Bayes_list_mean = []
     recall_Bayes_list_mean = []
+    f1_Bayes_list_mean = []
 
     acc_LDP_list_mean = []
     precision_LDP_list_mean = []
     recall_LDP_list_mean = []
+    f1_LDP_list_mean = []
 
     test_times = 50
 
@@ -129,42 +131,52 @@ if __name__ == '__main__':
         acc_LDP_list = []
         precision_LDP_list = []
         recall_LDP_list = []
+        f1_LDP_list = []
 
         acc_Bayes_list = []
         precision_Bayes_list = []
         recall_Bayes_list = []
+        f1_Bayes_list = []
 
         for eps_dis in eps_dis_list:
+            print("epsilon: ", eps_dis)
             _, X_test, _, Y_test = train_test_split(X_train, Y_train, test_size=0.2)
             naiveBayesLDP = NaiveBayesLDP(eps_con=eps_con, eps_dis=eps_dis)
             naiveBayesLDP.fit(X_train=X_train, Y_train=Y_train, continuous_index=continuous_index)
-            acc_LDP, _, precision_LDP, recall_LDP = naiveBayesLDP.predict(X_test=X_test, Y_test=Y_test,
-                                                                          continuous_index=continuous_index)
-            acc_Bayes, precision_Bayes, recall_Bayes = Bayes_Model(X_train, Y_train, X_test, Y_test)
+            acc_LDP, _, precision_LDP, recall_LDP, f1_LDP = naiveBayesLDP.predict(X_test=X_test, Y_test=Y_test,
+                                                                                  continuous_index=continuous_index)
+            acc_Bayes, precision_Bayes, recall_Bayes, f1_Bayes = Bayes_Model(X_train, Y_train, X_test, Y_test,
+                                                                             continuous=False)
 
             acc_LDP_list.append(acc_LDP)
-            precision_LDP_list.append(acc_LDP)
+            precision_LDP_list.append(precision_LDP)
             recall_LDP_list.append(recall_LDP)
+            f1_LDP_list.append(f1_LDP)
 
             acc_Bayes_list.append(acc_Bayes)
             precision_Bayes_list.append(precision_Bayes)
             recall_Bayes_list.append(recall_Bayes)
+            f1_Bayes_list.append(f1_Bayes)
 
         acc_Bayes_list_mean.append(acc_Bayes_list)
         precision_Bayes_list_mean.append(precision_Bayes_list)
         recall_Bayes_list_mean.append(recall_Bayes_list)
+        f1_Bayes_list_mean.append(f1_Bayes_list)
 
         acc_LDP_list_mean.append(acc_LDP_list)
         precision_LDP_list_mean.append(precision_LDP_list)
         recall_LDP_list_mean.append(recall_LDP_list)
+        f1_LDP_list_mean.append(f1_LDP_list)
 
     acc_Bayes_list_mean = np.mean(acc_Bayes_list_mean, axis=0)
     precision_Bayes_list_mean = np.mean(precision_Bayes_list_mean, axis=0)
     recall_Bayes_list_mean = np.mean(recall_Bayes_list_mean, axis=0)
+    f1_Bayes_list_mean = np.mean(f1_Bayes_list_mean, axis=0)
 
     acc_LDP_list_mean = np.mean(acc_LDP_list_mean, axis=0)
     precision_LDP_list_mean = np.mean(precision_LDP_list_mean, axis=0)
     recall_LDP_list_mean = np.mean(recall_LDP_list_mean, axis=0)
+    f1_LDP_list_mean = np.mean(f1_LDP_list_mean, axis=0)
     plt.style.use(['science', 'ieee', 'no-latex'])
 
     plt.ylim(0, 1)
@@ -195,4 +207,14 @@ if __name__ == '__main__':
     plt.ylabel("Recall")
     plt.legend(loc="lower right")
     plt.savefig("./ieee_fig_new/connect-4_ieee_recall.png")
+    plt.show()
+
+    plt.ylim(0, 1)
+    plt.grid(linestyle="--")
+    plt.plot(eps_dis_list, f1_Bayes_list_mean, label="Bayes", linestyle='-')
+    plt.plot(eps_dis_list, f1_LDP_list_mean, label="LDP_Bayes", linestyle='-')
+    plt.xlabel("ε")
+    plt.ylabel("F1 Score")
+    plt.legend(loc="lower right")
+    plt.savefig("./ieee_fig_new/connect-4_ieee_f1.png")
     plt.show()

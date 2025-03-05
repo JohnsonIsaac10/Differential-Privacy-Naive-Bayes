@@ -6,7 +6,7 @@ import numpy as np
 # 用于编码的类
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
-
+from sklearn.decomposition import PCA
 
 train_data_path = "./data/diabetes.csv"
 test_data_path = "./data/diabetes.csv"
@@ -62,8 +62,17 @@ def process_data(train_data_df):
 
 if __name__ == '__main__':
     eps_dis = 4
+    eps_con = 4
     train_data_df, test_data_df = get_data()
     X_train, Y_train, train_data_encode, continuous_index, discrete_index = process_data(train_data_df)
+
+    pca = PCA(n_components=0.98)
+    X_train = pca.fit_transform(X_train)
+    print('保留的主成分个数：', pca.n_components_)
+    print('保留的特征向量：\n', pca.components_)
+    print('保留的n个主成分各自方差：\n', pca.explained_variance_)
+
+    print('保留的n个主成分对原始数据信息累计解释的贡献率：\n', np.cumsum(pca.explained_variance_ratio_))
 
     import matplotlib.pyplot as plt
 
@@ -72,10 +81,13 @@ if __name__ == '__main__':
     acc_Bayes_list_mean = []
     precision_Bayes_list_mean = []
     recall_Bayes_list_mean = []
+    f1_Bayes_list_mean = []
 
     acc_LDP_list_mean = []
     precision_LDP_list_mean = []
     recall_LDP_list_mean = []
+    f1_LDP_list_mean = []
+
     acc_LDP_multi_list_mean = []
 
     test_times = 50
@@ -83,48 +95,60 @@ if __name__ == '__main__':
         acc_LDP_list = []
         precision_LDP_list = []
         recall_LDP_list = []
+        f1_LDP_list = []
 
         acc_Bayes_list = []
         precision_Bayes_list = []
         recall_Bayes_list = []
+        f1_Bayes_list = []
+
         acc_LDP_multi_list = []
 
         for eps_con in eps_con_list:
+            print("epsilon: ", eps_con)
             _, X_test, _, Y_test = train_test_split(X_train, Y_train, test_size=0.2)
             naiveBayesLDP = NaiveBayesLDP(eps_con=eps_con, eps_dis=eps_dis)
             naiveBayesLDP.fit(X_train=X_train, Y_train=Y_train, continuous_index=continuous_index)
 
             naiveBayesLDP.fit_multi_continuous(X_train=X_train, Y_train=Y_train)
-            acc_LDP, acc_LDP_multi, precision_LDP, recall_LDP = naiveBayesLDP.predict(X_test=X_test, Y_test=Y_test,
+            acc_LDP, acc_LDP_multi, precision_LDP, recall_LDP, f1_LDP = naiveBayesLDP.predict(X_test=X_test, Y_test=Y_test,
                                                            continuous_index=continuous_index)
-            acc_Bayes, precision_Bayes, recall_Bayes = Bayes_Model(X_train, Y_train, X_test, Y_test)
+            acc_Bayes, precision_Bayes, recall_Bayes, f1_Bayes = Bayes_Model(X_train, Y_train, X_test, Y_test,
+                                                                   continuous=True)
 
             acc_LDP_list.append(acc_LDP)
             precision_LDP_list.append(acc_LDP)
             recall_LDP_list.append(recall_LDP)
+            f1_LDP_list.append(f1_LDP)
 
             acc_Bayes_list.append(acc_Bayes)
             precision_Bayes_list.append(precision_Bayes)
             recall_Bayes_list.append(recall_Bayes)
+            f1_Bayes_list.append(f1_Bayes)
 
             acc_LDP_multi_list.append(acc_LDP_multi)
 
         acc_Bayes_list_mean.append(acc_Bayes_list)
         precision_Bayes_list_mean.append(precision_Bayes_list)
         recall_Bayes_list_mean.append(recall_Bayes_list)
+        f1_Bayes_list_mean.append(f1_Bayes_list)
 
         acc_LDP_list_mean.append(acc_LDP_list)
         precision_LDP_list_mean.append(precision_LDP_list)
         recall_LDP_list_mean.append(recall_LDP_list)
+        f1_LDP_list_mean.append(f1_LDP_list)
+
         acc_LDP_multi_list_mean.append(acc_LDP_multi_list)
 
     acc_Bayes_list_mean = np.mean(acc_Bayes_list_mean, axis=0)
     precision_Bayes_list_mean = np.mean(precision_Bayes_list_mean, axis=0)
     recall_Bayes_list_mean = np.mean(recall_Bayes_list_mean, axis=0)
+    f1_Bayes_list_mean = np.mean(f1_Bayes_list_mean, axis=0)
 
     acc_LDP_list_mean = np.mean(acc_LDP_list_mean, axis=0)
     precision_LDP_list_mean = np.mean(precision_LDP_list_mean, axis=0)
     recall_LDP_list_mean = np.mean(recall_LDP_list_mean, axis=0)
+    f1_LDP_list_mean = np.mean(f1_LDP_list_mean, axis=0)
 
     acc_LDP_multi_list_mean = np.mean(acc_LDP_multi_list_mean, axis=0)
     plt.style.use(['science', 'ieee', 'no-latex'])
@@ -157,5 +181,15 @@ if __name__ == '__main__':
     plt.ylabel("Recall")
     plt.legend(loc="lower right")
     plt.savefig("./ieee_fig_new/Diabetes_ieee_recall.png")
+    plt.show()
+
+    plt.ylim(0, 1)
+    plt.grid(linestyle="--")
+    plt.plot(eps_con_list, f1_Bayes_list_mean, label="Bayes", linestyle='-')
+    plt.plot(eps_con_list, f1_LDP_list_mean, label="LDP_Bayes", linestyle='-')
+    plt.xlabel("ε")
+    plt.ylabel("F1 Score")
+    plt.legend(loc="lower right")
+    plt.savefig("./ieee_fig_new/Diabetes_ieee_f1.png")
     plt.show()
 
